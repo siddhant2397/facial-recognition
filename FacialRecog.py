@@ -27,8 +27,7 @@ def download_model_from_gdrive(file_id, destination):
         st.info("Model already present.")
 
 # --- Setup MongoDB connection ---
-mongo_client = pymongo.MongoClient("mongodb+srv://siddhantgoswami2397:KjhSS0HMcd1Km3JP@siddhant.qw1vjzb.mongodb.net/?retryWrites=true&w=majority&appName=Siddhant
-")
+mongo_client = pymongo.MongoClient("mongodb+srv://siddhantgoswami2397:KjhSS0HMcd1Km3JP@siddhant.qw1vjzb.mongodb.net/?retryWrites=true&w=majority&appName=Siddhant")
 db = mongo_client["FacialRecog"]
 people = db["people"]
 
