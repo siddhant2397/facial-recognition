@@ -1,8 +1,9 @@
-﻿streamlit
-langchain
-faiss-cpu
-PyMuPDF
-pandas
-unstructured
-sentence-transformers
-huggingface-hub
+streamlit
+tensorflow
+mtcnn
+opencv-python-headless
+pillow
+numpy
+scikit-learn
+scipy
+pymongo
