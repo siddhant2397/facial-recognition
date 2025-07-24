@@ -6,6 +6,7 @@ pillow
 numpy
 scikit-learn
 scipy
-pymongo
+pymongo==4.8.0
 keras
 keras-facenet
+dnspython
