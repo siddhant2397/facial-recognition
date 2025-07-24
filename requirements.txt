@@ -1,7 +1,7 @@
 streamlit
-keras-facenet==0.3.2
-tensorflow==2.10.0
-keras==2.6.0
+keras-facenet
+tensorflow
+keras
 numpy
 opencv-python
 pillow
