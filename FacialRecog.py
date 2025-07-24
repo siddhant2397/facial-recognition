@@ -43,7 +43,7 @@ def normalize_img(img):
 def get_emb(face):
     face = normalize_img(face)
     face = cv2.resize(face, (160, 160))
-    emb = model.predict(np.expand_dims(face, axis=0))[0]
+    emb = model.embeddings([face])[0]
     return emb
 
 def encode_face(image):
