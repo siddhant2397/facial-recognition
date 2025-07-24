@@ -94,7 +94,7 @@ with tab2:
             for person in people.find():
                 db_emb = np.array(person['embedding'])
                 dist = cosine(emb, db_emb)
-                print(f"Comparing with {person['name']} at distance {dist}")
+                st.write(f"Comparing with {person['name']} at distance {dist}")
                 if dist < 0.5 and dist < min_dist:  # Threshold for face match
                     min_dist = dist
                     matched_name = person['name']
