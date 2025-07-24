@@ -1,5 +1,5 @@
 streamlit
-tensorflow
+tensorflow==2.10.0
 mtcnn
 opencv-python-headless
 pillow
@@ -7,6 +7,6 @@ numpy
 scikit-learn
 scipy
 pymongo==4.8.0
-keras
-keras-facenet
+keras==2.6.0
+keras-facenet==0.3.2
 dnspython
