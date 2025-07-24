@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import numpy as np
 from PIL import Image
@@ -8,32 +7,20 @@ from tensorflow import keras
 import mtcnn
 from sklearn.preprocessing import Normalizer
 from scipy.spatial.distance import cosine
-import gdown
+from keras_facenet import FaceNet
 
-# --- Constants ---
-MODEL_DIR = 'model'
-MODEL_PATH = os.path.join(MODEL_DIR, 'model.h5')
-GOOGLE_DRIVE_FILE_ID = '1SYPmgnDx9E_t6HvELu8d4so2H-fBeNfB'  # Replace with your file ID from Google Drive
+def face_recognition_model():
+    model = FaceNet()
+    return model
 
-# --- Function to download model from Google Drive ---
-def download_model_from_gdrive(file_id, destination):
-    if not os.path.exists(destination):
-        os.makedirs(os.path.dirname(destination), exist_ok=True)
-        url = f'https://drive.google.com/uc?id={file_id}'
-        st.info("Downloading model, please wait...")
-        gdown.download(url, destination, quiet=False)
-        st.success("Model downloaded successfully!")
-    else:
-        st.info("Model already present.")
+model = face_recognition_model()
 
 # --- Setup MongoDB connection ---
 mongo_client = pymongo.MongoClient("mongodb+srv://siddhantgoswami2397:KjhSS0HMcd1Km3JP@siddhant.qw1vjzb.mongodb.net/?retryWrites=true&w=majority&appName=Siddhant")
 db = mongo_client["FacialRecog"]
 people = db["people"]
 
-# --- Load the model (download first if needed) ---
-download_model_from_gdrive(GOOGLE_DRIVE_FILE_ID, MODEL_PATH)
-model = keras.models.load_model(MODEL_PATH)
+
 
 # --- Helper functions ---
 
