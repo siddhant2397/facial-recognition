@@ -35,28 +35,28 @@ def register_face(image_bytes):
     st.write(f"No face detected in the image or API response error:{faces}")
     return None
 
-def get_registered_faces():
-    """Retrieves all registered faceId and images from MongoDB."""
-    return list(col.find({}))
+#def get_registered_faces():
+   # """Retrieves all registered faceId and images from MongoDB."""
+    #return list(col.find({}))
 
-def verify_face(face_id1, face_id2):
-    """Uses Azure Face API to verify two faceIds."""
-    url = AZURE_ENDPOINT + "face/v1.0/verify"
-    headers = {'Ocp-Apim-Subscription-Key': AZURE_KEY, 'Content-Type': 'application/json'}
-    data = {"faceId1": face_id1, "faceId2": face_id2}
-    response = requests.post(url, headers=headers, json=data)
-    return response.json()
+#def verify_face(face_id1, face_id2):
+    #"""Uses Azure Face API to verify two faceIds."""
+    #url = AZURE_ENDPOINT + "face/v1.0/verify"
+    #headers = {'Ocp-Apim-Subscription-Key': AZURE_KEY, 'Content-Type': 'application/json'}
+    #data = {"faceId1": face_id1, "faceId2": face_id2}
+    #response = requests.post(url, headers=headers, json=data)
+    #return response.json()
 
-def get_face_id_from_image(image_bytes):
-    """Detect face in image and return faceId."""
-    url = AZURE_ENDPOINT + "face/v1.0/detect"
-    headers = {'Ocp-Apim-Subscription-Key': AZURE_KEY, 'Content-Type': 'application/octet-stream'}
-    params = {'returnFaceId': 'true'}
-    response = requests.post(url, headers=headers, params=params, data=image_bytes)
-    faces = response.json()
-    if faces:
-        return faces[0]['faceId']
-    return None
+#def get_face_id_from_image(image_bytes):
+    #"""Detect face in image and return faceId."""
+    #url = AZURE_ENDPOINT + "face/v1.0/detect"
+    #headers = {'Ocp-Apim-Subscription-Key': AZURE_KEY, 'Content-Type': 'application/octet-stream'}
+    #params = {'returnFaceId': 'true'}
+    #response = requests.post(url, headers=headers, params=params, data=image_bytes)
+    #faces = response.json()
+    #if faces:
+        #return faces[0]['faceId']
+    #return None
 
 # ---- Streamlit UI ----
 st.title("Face Registration and Verification App")
@@ -79,12 +79,12 @@ with tab1:
         else:
             st.error("No face detected! Try another image.")
 
-    st.subheader("Registered Members:")
-    members = get_registered_faces()
-    for entry in members:
-        st.write(f"**Name:** {entry.get('name', 'N/A')}")
-        st.write(f"**Number:** {entry.get('number', 'N/A')}")
-        st.markdown("---")
+    #st.subheader("Registered Members:")
+    #members = get_registered_faces()
+    #for entry in members:
+        #st.write(f"**Name:** {entry.get('name', 'N/A')}")
+        #st.write(f"**Number:** {entry.get('number', 'N/A')}")
+        #st.markdown("---")
 
 with tab2:
     st.header("Verify Face")
