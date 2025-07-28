@@ -9,7 +9,7 @@ from datetime import datetime
 
 # --- Azure Face API credentials ---
 AZURE_ENDPOINT = "https://siddhant.cognitiveservices.azure.com/"  # e.g. https://<region>.api.cognitive.microsoft.com/
-AZURE_KEY = st.secrets["azure"]["key"]
+AZURE_KEY = st.secrets["key"]
 
 # --- MongoDB credentials ---
 
