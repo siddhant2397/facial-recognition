@@ -1,107 +1,140 @@
 import streamlit as st
-import numpy as np
 from PIL import Image
+import requests
+import io
 import pymongo
-import cv2
-from tensorflow import keras
-import mtcnn
-from sklearn.preprocessing import Normalizer
-from scipy.spatial.distance import cosine
-from keras_facenet import FaceNet
+import base64
+import os
+from datetime import datetime
 
-def face_recognition_model():
-    model = FaceNet()
-    return model
+# --- Azure Face API credentials ---
+AZURE_ENDPOINT = "https://siddhant.cognitiveservices.azure.com/"  # e.g. https://<region>.api.cognitive.microsoft.com/
+AZURE_KEY = st.secrets["azure"]["key"]
 
-model = face_recognition_model()
+# --- MongoDB credentials ---
 
-# --- Setup MongoDB connection ---
-mongo_client = pymongo.MongoClient("mongodb+srv://siddhantgoswami2397:KjhSS0HMcd1Km3JP@siddhant.qw1vjzb.mongodb.net/?retryWrites=true&w=majority&appName=Siddhant")
-db = mongo_client["FacialRecog"]
-people = db["people"]
+# --- MongoDB setup ---
+client = pymongo.MongoClient("mongodb+srv://siddhantgoswami2397:KjhSS0HMcd1Km3JP@siddhant.qw1vjzb.mongodb.net/?retryWrites=true&w=majority&appName=Siddhant")
+db = client["FacialRecog"]
+col = db["people"]
+db1 = client["attendance"]
+attendance_col = db["attendance_col"]
 
+def register_face(image_bytes):
+    """Detects face and stores image and Azure faceId in MongoDB."""
+    url = AZURE_ENDPOINT + "face/v1.0/detect"
+    headers = {'Ocp-Apim-Subscription-Key': AZURE_KEY, 'Content-Type': 'application/octet-stream'}
+    params = {'returnFaceId': 'true'}
+    response = requests.post(url, headers=headers, params=params, data=image_bytes)
+    faces = response.json()
+    if faces:
+        # encode image to base64 to save in MongoDB
+        face_id = faces[0]['faceId']
+        col.insert_one({"name":name, "number":number,"faceId": face_id})
+        return face_id
+    return None
 
+def get_registered_faces():
+    """Retrieves all registered faceId and images from MongoDB."""
+    return list(col.find({}))
 
-# --- Helper functions ---
+def verify_face(face_id1, face_id2):
+    """Uses Azure Face API to verify two faceIds."""
+    url = AZURE_ENDPOINT + "face/v1.0/verify"
+    headers = {'Ocp-Apim-Subscription-Key': AZURE_KEY, 'Content-Type': 'application/json'}
+    data = {"faceId1": face_id1, "faceId2": face_id2}
+    response = requests.post(url, headers=headers, json=data)
+    return response.json()
 
-def detect_face_mtcnn(img):
-    detector = mtcnn.MTCNN()
-    faces = detector.detect_faces(img)
-    return faces
+def get_face_id_from_image(image_bytes):
+    """Detect face in image and return faceId."""
+    url = AZURE_ENDPOINT + "face/v1.0/detect"
+    headers = {'Ocp-Apim-Subscription-Key': AZURE_KEY, 'Content-Type': 'application/octet-stream'}
+    params = {'returnFaceId': 'true'}
+    response = requests.post(url, headers=headers, params=params, data=image_bytes)
+    faces = response.json()
+    if faces:
+        return faces[0]['faceId']
+    return None
 
-def get_face(img, box):
-    x1, y1, width, height = box
-    x1, y1 = abs(x1), abs(y1)
-    x2 = x1 + width
-    y2 = y1 + height
-    return img[y1:y2, x1:x2]
+# ---- Streamlit UI ----
+st.title("Face Registration and Verification App")
 
-def normalize_img(img):
-    mean, std = img.mean(), img.std()
-    return (img - mean) / std
-
-def get_emb(face):
-    face = normalize_img(face)
-    face = cv2.resize(face, (160, 160))
-    emb = model.embeddings([face])[0]
-    return emb
-
-def encode_face(image):
-    img = np.array(image.convert('RGB'))
-    faces = detect_face_mtcnn(img)
-    if not faces:
-        return None
-    # Choose the biggest face detected
-    biggest = max(faces, key=lambda b: b['box'][2]*b['box'][3])
-    face = get_face(img, biggest['box'])
-    emb = get_emb(face)
-    l2 = Normalizer()
-    emb = l2.transform(emb.reshape(1, -1))[0]
-    return emb
-
-# --- Streamlit UI App ---
-
-st.title("Face Recognition Access Control with Model from Google Drive")
-
-tab1, tab2 = st.tabs(["Enroll New Person", "Authorize Person"])
+tab1, tab2, tab3 = st.tabs(["Register Face", "Verify Face", "Attendance Records"])
 
 with tab1:
-    st.header("Enroll New Person")
-    name = st.text_input("Enter Person's Name")
-    uploaded_img = st.file_uploader("Upload Person's Photo", type=['jpg', 'jpeg', 'png'])
-    if st.button("Enroll") and name and uploaded_img:
-        img = Image.open(uploaded_img)
-        emb = encode_face(img)
-        if emb is not None:
-            # Store embedding and name in MongoDB
-            people.insert_one({
-                "name": name.strip(),
-                "embedding": emb.tolist()
-            })
-            st.success(f"{name.strip()} enrolled successfully!")
+    st.header("Register Face for Verification")
+    name = st.text_input("Enter Name")
+    number = st.text_input("Enter Phone Number")
+    uploaded = st.file_uploader("Upload an image to register", type=["jpg", "jpeg", "png"])
+    if uploaded and name and number:
+        image = Image.open(uploaded).convert("RGB")
+        st.image(image, caption="Uploaded Image")
+        img_bytes_buf = io.BytesIO()
+        image.save(img_bytes_buf, format="JPEG")
+        face_id = register_face(img_bytes_buf.getvalue())
+        if face_id:
+            st.success(f"Face registered! Face ID: {face_id}")
         else:
-            st.warning("No face detected in the image. Please upload a clear face image.")
+            st.error("No face detected! Try another image.")
+
+    st.subheader("Registered Members:")
+    members = get_registered_faces()
+    for entry in members:
+        st.write(f"**Name:** {entry.get('name', 'N/A')}")
+        st.write(f"**Number:** {entry.get('number', 'N/A')}")
+        st.markdown("---")
 
 with tab2:
-    st.header("Authorize Person")
-    test_img = st.file_uploader("Upload Image to Authorize", type=['jpg', 'jpeg', 'png'])
-    if st.button("Authorize") and test_img:
-        img = Image.open(test_img)
-        emb = encode_face(img)
-        if emb is not None:
-            min_dist = 1.0
-            matched_name = "Unknown"
-            for person in people.find():
-                db_emb = np.array(person['embedding'])
-                dist = cosine(emb, db_emb)
-                st.write(f"Comparing with {person['name']} at distance {dist}")
-                if dist < 0.5 and dist < min_dist:  # Threshold for face match
-                    min_dist = dist
-                    matched_name = person['name']
-            if matched_name != "Unknown":
-                st.success(f"Access Granted! Welcome, {matched_name}.")
-            else:
-                st.error("Access Denied: Unknown Person.")
+    st.header("Verify Face")
+    uploaded_verify = st.file_uploader("Upload an image to verify", type=["jpg", "jpeg", "png"], key="verify_upload")
+    if uploaded_verify:
+        image = Image.open(uploaded_verify).convert("RGB")
+        st.image(image, caption="Verification Image")
+        img_bytes_buf = io.BytesIO()
+        image.save(img_bytes_buf, format="JPEG")
+        verify_face_id = get_face_id_from_image(img_bytes_buf.getvalue())
+        if not verify_face_id:
+            st.error("No face found in verification image!")
         else:
-            st.warning("No face detected in the uploaded image.")
+            faces = get_registered_faces()
+            if not faces:
+                st.warning("No registered faces in database.")
+            else:
+                result_list = []
+                for entry in faces:
+                    match_result = verify_face(verify_face_id, entry['faceId'])
+                    confidence = match_result.get("confidence", 0)
+                    isIdentical = match_result.get("isIdentical", False)
+                    if isIdentical:
+                        result_list.append((entry['faceId'],entry['name'],entry['number'], confidence, isIdentical))
+                        timestamp = datetime.utcnow()
+                        attendance_record = {
+                            "faceId": face_id,
+                            "name": name,
+                            "number": number,
+                            "timestamp": timestamp
+                        }
+                        attendance_col.insert_one(attendance_record)
+                        st.success(f"Attendance recorded for {name} at {timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}")
 
+                # Show results
+                st.subheader("Verification Results")
+                if result_list:
+                    for face_id, name, number, confidence, isIdentical in result_list:
+                        st.write(f"**Compared with:**")
+                        st.write(f"- Name: {name}")
+                        st.write(f"- Number: {number}")
+                        st.write(f"- Face ID: {face_id}")
+                        st.write(f"- Confidence: {confidence:.2f}")
+                        st.write("Authorized")
+                else:
+                    st.error("Unauthorized")
+with tab3:
+    st.subheader("Attendance Records")
+    records = attendance_col.find().sort("timestamp", -1).limit(20)
+    for rec in records:
+        st.write(
+            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) - "
+            f"{rec.get('timestamp').strftime('%Y-%m-%d %H:%M:%S UTC')}"
+        )
