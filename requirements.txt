@@ -1,12 +1,4 @@
 streamlit
-keras-facenet
-tensorflow
-keras
-numpy
-opencv-python
-pillow
-mtcnn
-scikit-learn
-pymongo==4.8.0
-dnspython
-scipy
+pymongo
+requests
+Pillow
