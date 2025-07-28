@@ -27,11 +27,12 @@ def register_face(image_bytes):
     params = {'returnFaceId': 'true'}
     response = requests.post(url, headers=headers, params=params, data=image_bytes)
     faces = response.json()
-    if faces:
+    if faces and isinstance(faces, list):
         # encode image to base64 to save in MongoDB
         face_id = faces[0]['faceId']
         col.insert_one({"name":name, "number":number,"faceId": face_id})
         return face_id
+    st.write(f"No face detected in the image or API response error:{faces}")
     return None
 
 def get_registered_faces():
