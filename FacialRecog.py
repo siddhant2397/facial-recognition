@@ -67,7 +67,7 @@ tab1, tab2, tab3 = st.tabs(["Register Face", "Verify Face", "Attendance Records"
 with tab1:
     st.header("Register Face for Verification")
     name = st.text_input("Enter Name")
-    number = st.text_input("Enter Phone Number")
+    number = st.text_input("Enter Service Number")
     uploaded = st.file_uploader("Upload an image to register", type=["jpg", "jpeg", "png"])
     if uploaded and name and number:
         if st.button("Register Face"):
