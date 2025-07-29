@@ -70,15 +70,16 @@ with tab1:
     number = st.text_input("Enter Phone Number")
     uploaded = st.file_uploader("Upload an image to register", type=["jpg", "jpeg", "png"])
     if uploaded and name and number:
-        image = Image.open(uploaded).convert("RGB")
-        st.image(image, caption="Uploaded Image")
-        img_bytes_buf = io.BytesIO()
-        image.save(img_bytes_buf, format="JPEG")
-        face_id = register_face(img_bytes_buf.getvalue())
-        if face_id:
-            st.success(f"Face registered! Face ID: {face_id}")
-        else:
-            st.error("No face detected! Try another image.")
+        if st.button("Register Face"):
+            image = Image.open(uploaded).convert("RGB")
+            st.image(image, caption="Uploaded Image")
+            img_bytes_buf = io.BytesIO()
+            image.save(img_bytes_buf, format="JPEG")
+            face_id = register_face(img_bytes_buf.getvalue())
+            if face_id:
+                st.success(f"Face registered! Face ID: {face_id}")
+            else:
+                st.error("No face detected! Try another image.")
 
     st.subheader("Registered Members:")
     members = get_registered_faces()
