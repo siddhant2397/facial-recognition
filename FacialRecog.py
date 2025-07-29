@@ -120,7 +120,7 @@ with tab2:
                             ist_timestamp = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)
                             attendance_record = {"faceId": face_id,"name": name,
                                                  "number": number,
-                                                 "timestamp": timestamp}
+                                                 "timestamp": now_utc}
                             attendance_col.insert_one(attendance_record)
                             st.success(f"Attendance recorded for {name} at {ist_timestamp.strftime('%Y-%m-%d %H:%M:%S %Z')}")
                         else:
