@@ -145,6 +145,5 @@ with tab3:
     for rec in records:
         ist_time = rec['timestamp'].replace(tzinfo=pytz.utc).astimezone(ist)
         st.write(
-            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) - 
-            {ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) - {ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
