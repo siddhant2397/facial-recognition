@@ -110,6 +110,9 @@ with tab2:
                     confidence = match_result.get("confidence", 0)
                     isIdentical = match_result.get("isIdentical", False)
                     if isIdentical:
+                        face_id = entry['faceId']
+                        name = entry.get('name', 'N/A')
+                        number = entry.get('number', 'N/A')
                         result_list.append((entry['faceId'],entry['name'],entry['number'], confidence, isIdentical))
                         now_utc = datetime.utcnow()
                         start_day = datetime(now_utc.year, now_utc.month, now_utc.day)
