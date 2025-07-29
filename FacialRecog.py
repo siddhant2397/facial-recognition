@@ -5,7 +5,8 @@ import io
 import pymongo
 import base64
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 
 # --- Azure Face API credentials ---
 AZURE_ENDPOINT = "https://siddhant.cognitiveservices.azure.com/"  # e.g. https://<region>.api.cognitive.microsoft.com/
@@ -103,21 +104,28 @@ with tab2:
                 st.warning("No registered faces in database.")
             else:
                 result_list = []
+                ist = pytz.timezone('Asia/Kolkata')
                 for entry in faces:
                     match_result = verify_face(verify_face_id, entry['faceId'])
                     confidence = match_result.get("confidence", 0)
                     isIdentical = match_result.get("isIdentical", False)
                     if isIdentical:
                         result_list.append((entry['faceId'],entry['name'],entry['number'], confidence, isIdentical))
-                        timestamp = datetime.utcnow()
-                        attendance_record = {
-                            "faceId": face_id,
-                            "name": name,
-                            "number": number,
-                            "timestamp": timestamp
-                        }
-                        attendance_col.insert_one(attendance_record)
-                        st.success(f"Attendance recorded for {name} at {timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+                        now_utc = datetime.utcnow()
+                        start_day = datetime(now_utc.year, now_utc.month, now_utc.day)
+                        end_day = start_day + timedelta(days=1)
+                        existing_attendance = attendance_col.find_one({"faceId": face_id,
+                                                                       "timestamp": {"$gte": start_day, "$lt": end_day}})
+                        if existing_attendance is None:
+                            ist_timestamp = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+                            attendance_record = {"faceId": face_id,"name": name,
+                                                 "number": number,
+                                                 "timestamp": timestamp}
+                            attendance_col.insert_one(attendance_record)
+                            st.success(f"Attendance recorded for {name} at {ist_timestamp.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+                        else:
+                            st.info(f"Attendance for {name} already recorded today.")
+                            
 
                 # Show results
                 st.subheader("Verification Results")
@@ -133,9 +141,10 @@ with tab2:
                     st.error("Unauthorized")
 with tab3:
     st.subheader("Attendance Records")
-    records = attendance_col.find().sort("timestamp", -1).limit(20)
+    records = attendance_col.find().sort("timestamp", -1).limit(200)
     for rec in records:
+        ist_time = rec['timestamp'].replace(tzinfo=pytz.utc).astimezone(ist)
         st.write(
-            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) - "
-            f"{rec.get('timestamp').strftime('%Y-%m-%d %H:%M:%S UTC')}"
+            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) - 
+            {ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         )
