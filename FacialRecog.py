@@ -81,12 +81,12 @@ with tab1:
             else:
                 st.error("No face detected! Try another image.")
 
-    st.subheader("Registered Members:")
-    members = get_registered_faces()
-    for entry in members:
-        st.write(f"**Name:** {entry.get('name', 'N/A')}")
-        st.write(f"**Number:** {entry.get('number', 'N/A')}")
-        st.markdown("---")
+    if st.button("Registered Members:"):
+        members = get_registered_faces()
+        for entry in members:
+            st.write(f"**Name:** {entry.get('name', 'N/A')}")
+            st.write(f"**Number:** {entry.get('number', 'N/A')}")
+            st.markdown("---")
 
 with tab2:
     st.header("Verify Face")
