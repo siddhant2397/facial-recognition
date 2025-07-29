@@ -147,4 +147,4 @@ with tab3:
         st.write(
             f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) - 
             {ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
-        )
+        
