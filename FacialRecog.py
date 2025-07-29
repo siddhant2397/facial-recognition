@@ -140,6 +140,7 @@ with tab2:
                 else:
                     st.error("Unauthorized")
 with tab3:
+    ist = pytz.timezone('Asia/Kolkata')
     st.subheader("Attendance Records")
     records = attendance_col.find().sort("timestamp", -1).limit(200)
     for rec in records:
