@@ -60,7 +60,7 @@ def get_face_id_from_image(image_bytes):
     return None
 
  #---- Streamlit UI ----
-st.title("Face Registration and Verification App")
+st.title("Face Registration and Verification App (Developed by Siddhant Goswami")
 
 tab1, tab2, tab3 = st.tabs(["Register Face", "Verify Face", "Attendance Records"])
 
