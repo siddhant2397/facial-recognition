@@ -121,9 +121,11 @@ with tab2:
                         existing_attendance = attendance_col.find_one({"faceId": face_id,
                                                                        "timestamp": {"$gte": start_day, "$lt": end_day}})
                         if existing_attendance is None:
+                            WNumber = st.text_input("Enter your W number (to store with attendance)")
                             ist_timestamp = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)
                             attendance_record = {"faceId": face_id,"name": name,
                                                  "number": number,
+                                                 "WNumber": WNumber,
                                                  "timestamp": now_utc}
                             attendance_col.insert_one(attendance_record)
                             st.success(f"Attendance recorded for {name} at {ist_timestamp.strftime('%Y-%m-%d %H:%M:%S %Z')}")
@@ -150,5 +152,5 @@ with tab3:
     for rec in records:
         ist_time = rec['timestamp'].replace(tzinfo=pytz.utc).astimezone(ist)
         st.write(
-            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) - {ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) ({rec.get('WNumber', 'N/A')}) - {ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
