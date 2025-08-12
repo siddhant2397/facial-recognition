@@ -104,47 +104,52 @@ with tab2:
             if not faces:
                 st.warning("No registered faces in database.")
             else:
-                result_list = []
                 ist = pytz.timezone('Asia/Kolkata')
+                authorized_user = None
+                confidence = 0.0
                 for entry in faces:
                     match_result = verify_face(verify_face_id, entry['faceId'])
-                    confidence = match_result.get("confidence", 0)
                     isIdentical = match_result.get("isIdentical", False)
                     if isIdentical:
-                        face_id = entry['faceId']
-                        name = entry.get('name', 'N/A')
-                        number = entry.get('number', 'N/A')
-                        result_list.append((entry['faceId'],entry['name'],entry['number'], confidence, isIdentical))
-                        now_utc = datetime.utcnow()
-                        start_day = datetime(now_utc.year, now_utc.month, now_utc.day)
-                        end_day = start_day + timedelta(days=1)
-                        existing_attendance = attendance_col.find_one({"faceId": face_id,
-                                                                       "timestamp": {"$gte": start_day, "$lt": end_day}})
-                        if existing_attendance is None:
-                            WNumber = st.text_input("Enter your W number (to store with attendance)")
-                            ist_timestamp = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)
-                            attendance_record = {"faceId": face_id,"name": name,
-                                                 "number": number,
-                                                 "WNumber": WNumber,
-                                                 "timestamp": now_utc}
-                            attendance_col.insert_one(attendance_record)
-                            st.success(f"Attendance recorded for {name} at {ist_timestamp.strftime('%Y-%m-%d %H:%M:%S %Z')}")
-                        else:
-                            st.info(f"Attendance for {name} already recorded today.")
-                            
-
-                # Show results
-                st.subheader("Verification Results")
-                if result_list:
-                    for face_id, name, number, confidence, isIdentical in result_list:
-                        st.write(f"**Compared with:**")
-                        st.write(f"- Name: {name}")
-                        st.write(f"- Number: {number}")
-                        st.write(f"- Face ID: {face_id}")
-                        st.write(f"- Confidence: {confidence:.2f}")
-                        st.write("Authorized")
+                        authorized_user = entry
+                        confidence = match_result.get("confidence", 0)
+                        break
+                if authorized_user is None:
+                    st.error("Unauthorized: No matching registered face found.")
                 else:
-                    st.error("Unauthorized")
+                    st.success(f"Authorized user: {authorized_user.get('name', 'N/A')} "
+                               f"User Number: {authorized_user.get('number', 'N/A')} "
+                               f"(Confidence: {confidence:.2f})")
+
+                    
+                    now_ist = datetime.now(ist)
+                    start_day = datetime.combine(now_ist.date(), time.min).replace(tzinfo=ist)
+                    end_day = start_day + timedelta(days=1)
+
+                    existing_attendance = attendance_col.find_one({"faceId": authorized_user['faceId'],
+                                                                       "timestamp": {"$gte": start_day, "$lt": end_day}})
+                    if existing_attendance:
+                        st.info(f"Attendance for {authorized_user.get('name', 'N/A')} already recorded today.")
+                    else:
+                        # Prompt for WNumber input after authorization confirmed
+                        WNumber = st.text_input("Enter your W number (to store with attendance)")
+                        if st.button("Submit Attendance"):
+                            if not WNumber.strip():
+                                st.warning("Please enter your W number before submitting.")
+                            else:                              
+                                attendance_record = {
+                                    "faceId": authorized_user['faceId'],
+                                    "name": authorized_user.get('name', 'N/A'),
+                                    "number": authorized_user.get('number', 'N/A'),
+                                    "WNumber": WNumber.strip(),
+                                    "timestamp": now_ist
+                                }
+                                attendance_col.insert_one(attendance_record)
+                                st.success(f"Attendance recorded for {authorized_user.get('name', 'N/A')} at {now_ist.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+                                                    
+
+                
+                
 with tab3:
     ist = pytz.timezone('Asia/Kolkata')
     st.subheader("Attendance Records")
@@ -152,5 +157,5 @@ with tab3:
     for rec in records:
         ist_time = rec['timestamp'].replace(tzinfo=pytz.utc).astimezone(ist)
         st.write(
-            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) ({rec.get('WNumber', 'N/A')}) - {ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            f"{rec.get('name', 'N/A')} ({rec.get('number', 'N/A')}) - {ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
