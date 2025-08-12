@@ -156,20 +156,18 @@ with tab3:
     st.subheader("Attendance Records")
     records = attendance_col.find().sort("timestamp", -1).limit(200)
     for rec in records:
-    # Mongo returns UTC time with tzinfo=UTC (or naive but treated as UTC)
-    ts = rec['timestamp']
-    # Convert from UTC to IST
-    if ts.tzinfo is None:
-        # If naive, assume UTC and localize
-        ts_utc = pytz.utc.localize(ts)
-    else:
-        ts_utc = ts
-    ist_time = ts_utc.astimezone(ist)
-    
-    st.write(
-        f"{rec.get('name', 'N/A')} "
-        f"({rec.get('number', 'N/A')}) "
-        f"({rec.get('WNumber', 'N/A')}) - "
-        f"{ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}"
-    )
+        # Mongo returns UTC time with tzinfo=UTC (or naive but treated as UTC)
+        ts = rec['timestamp']
+        # Convert from UTC to IST
+        if ts.tzinfo is None:
+            # If naive, assume UTC and localize
+            ts_utc = pytz.utc.localize(ts)
+        else:
+            ts_utc = ts
+        ist_time = ts_utc.astimezone(ist)
+        st.write(f"{rec.get('name', 'N/A')} "
+                 f"({rec.get('number', 'N/A')}) "
+                 f"({rec.get('WNumber', 'N/A')}) - "
+                 f"{ist_time.strftime('%Y-%m-%d %H:%M:%S %Z')}"
+                )
         
