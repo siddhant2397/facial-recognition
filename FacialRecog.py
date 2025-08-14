@@ -119,7 +119,6 @@ with tab2:
                 if isIdentical:
                     authorized_user = face_record
                     confidence = match_result.get("confidence", 0)
-                    break
                 if authorized_user:
                     st.session_state["verify_done"] = True
                     st.session_state["authorized_user"] = authorized_user
