@@ -59,6 +59,11 @@ def get_face_id_from_image(image_bytes):
         return faces[0]['faceId']
     return None
 
+def get_face_by_name_and_number(name, number):
+    """Retrieve a registered face document by name and number."""
+    return col.find_one({"name": name, "number": number})
+
+
  #---- Streamlit UI ----
 st.title("Face Registration and Verification App")
 
@@ -90,30 +95,31 @@ with tab1:
 
 with tab2:
     st.header("Verify Face")
+    name_verify = st.text_input("Enter Name for Verification")
+    number_verify = st.text_input("Enter Service Number for Verification")
     uploaded_verify = st.file_uploader("Upload an image to verify", type=["jpg", "jpeg", "png"], key="verify_upload")
-    if uploaded_verify and not st.session_state.get("verify_done", False):
-        image = Image.open(uploaded_verify).convert("RGB")
-        st.image(image, caption="Verification Image")
-        img_bytes_buf = io.BytesIO()
-        image.save(img_bytes_buf, format="JPEG")
-        verify_face_id = get_face_id_from_image(img_bytes_buf.getvalue())
-        if not verify_face_id:
-            st.error("No face found in verification image!")
+    if uploaded_verify and name_verify and number_verify and not st.session_state.get("verify_done", False):
+        face_record = get_face_by_name_and_number(name_verify, number_verify)
+        if not face_record:
+            st.error("No registered face found for the given name and number.")
         else:
-            faces = get_registered_faces()
-            if not faces:
-                st.warning("No registered faces in database.")
+            image = Image.open(uploaded_verify).convert("RGB")
+            st.image(image, caption="Verification Image")
+            img_bytes_buf = io.BytesIO()
+            image.save(img_bytes_buf, format="JPEG")
+            verify_face_id = get_face_id_from_image(img_bytes_buf.getvalue())
+            if not verify_face_id:
+                st.error("No face found in verification image!")
             else:
                 ist = pytz.timezone('Asia/Kolkata')
                 authorized_user = None
                 confidence = 0.0
-                for entry in faces:
-                    match_result = verify_face(verify_face_id, entry['faceId'])
-                    isIdentical = match_result.get("isIdentical", False)
-                    if isIdentical:
-                        authorized_user = entry
-                        confidence = match_result.get("confidence", 0)
-                        break
+                match_result = verify_face(verify_face_id, face_record['faceId'])                    
+                isIdentical = match_result.get("isIdentical", False)
+                if isIdentical:
+                    authorized_user = face_record
+                    confidence = match_result.get("confidence", 0)
+                    break
                 if authorized_user:
                     st.session_state["verify_done"] = True
                     st.session_state["authorized_user"] = authorized_user
