@@ -156,11 +156,7 @@ with tab2:
                                f"{now_ist.strftime('%Y-%m-%d %H:%M:%S %Z')}"
                               )
                     st.session_state["verify_done"] = False
-                    st.session_state.pop("verify_name", None)
-                    st.session_state.pop("verify_number", None)
-                    st.session_state.pop("verify_upload", None)
-                    st.session_state.pop("attendance_wnum", None) # reset                                    
-                
+                    
 
 
 
